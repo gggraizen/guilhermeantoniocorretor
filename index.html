@@ -2,6 +2,8 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2sik+3CdMeCvenbY3SHn9RzRuZZrExuGFnY2tmUeu+g='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'none'; base-uri 'none'; form-action 'none'; manifest-src 'self'; upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Guilherme Antônio Imóveis | Lançamentos em Salvador, Lauro de Freitas e Camaçari</title>
 <meta name="description" content="Catálogo de imóveis novos em Salvador e região: 121 empreendimentos das principais construtoras, com preço a partir de, fotos e atendimento pelo WhatsApp. Corretor Guilherme Antônio, CRECI 38.840.">
@@ -16,7 +18,6 @@
 </head>
 <body>
 
-<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;600;700;800&display=swap">
 <style>
@@ -211,6 +212,8 @@ img{-webkit-user-drag:none;user-drag:none;pointer-events:none;-webkit-touch-call
 </dialog>
 
 <script>
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+if(window.top!==window.self){try{window.top.location=window.self.location.href;}catch(e){document.documentElement.style.display="none";}}
 
 (function(){
   var no=function(e){e.preventDefault();return false;};
@@ -228,7 +231,7 @@ function area(i){ if(!i.amin) return ""; const a=Math.round(i.amin), b=Math.roun
 function wa(msg){ return "https://wa.me/"+WA+"?text="+encodeURIComponent(msg); }
 $("waTop").href = wa("Olá, Guilherme! Vi seu catálogo de imóveis e quero ajuda para escolher um.");
 const st={q:"",cidade:"",bairro:"",cons:"",quartos:"",preco:"",ordem:"preco",sit:""};
-try{ const s=JSON.parse(localStorage.getItem("cat-filtros-v3")||"null"); if(s) Object.assign(st,s); }catch(e){}
+try{ const s=JSON.parse(localStorage.getItem("cat-filtros-v3")||"null"); if(s&&typeof s==="object"){ for(const k of Object.keys(st)){ if(typeof s[k]==="string"&&s[k].length<80) st[k]=s[k]; } } }catch(e){}
 function opts(sel,vals,label){ vals.forEach(v=>{const o=document.createElement("option");o.value=v;o.textContent=v+" ("+DATA.filter(label(v)).length+")";$(sel).appendChild(o);}); }
 const uniq=f=>[...new Set(DATA.map(f).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"pt-BR"));
 const cidades=uniq(i=>i.cidade), bairros=uniq(i=>i.bairro), consts=uniq(i=>i.construtora);
@@ -236,10 +239,10 @@ opts("fCidade",cidades,v=>i=>i.cidade===v); opts("fBairro",bairros,v=>i=>i.bairr
 const menor=Math.min(...DATA.filter(i=>i.preco!=null).map(i=>i.preco));
 $("stats").innerHTML=`<div><b>${DATA.length}</b><span>empreendimentos</span></div><div><b>${bairros.length}</b><span>bairros</span></div><div><b>${consts.length}</b><span>construtoras</span></div><div><b>${fmt(menor)}</b><span>menor valor de entrada</span></div>`;
 function norm(s){return (s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();}
-function foto(i,k){ return `img/${i.id}-${k}.jpg`; }
-function capa(i){ if(i.fotos) return `<img src="${foto(i,0)}" alt="Perspectiva do ${i.nome}" loading="lazy">${i.fotos>1?`<span class="nfotos">${i.fotos} fotos</span>`:""}`;
+function foto(i,k){ return "img/"+encodeURIComponent(i.id)+"-"+(k|0)+".jpg"; }
+function capa(i){ if(i.fotos) return `<img src="${foto(i,0)}" alt="Perspectiva do ${esc(i.nome)}" loading="lazy">${i.fotos>1?`<span class="nfotos">${i.fotos} fotos</span>`:""}`;
   if(i.img) return `<img src="covers/${i.id}.jpg" alt="Imagem do ${i.nome}" loading="lazy">`;
-  return `<div class="ph"><div>${i.nome}<small>Imagens sob consulta</small></div></div>`; }
+  return `<div class="ph"><div>${esc(i.nome)}<small>Imagens sob consulta</small></div></div>`; }
 function hash(s){let x=0;for(const c of s)x=(x*31+c.charCodeAt(0))>>>0;return x;}
 const FRASES=[
  i=>`Olá, Guilherme! Vi no seu catálogo o ${i.nome} e gostaria de saber mais.`,
@@ -267,23 +270,23 @@ function render(){
   $("limpar").hidden = !(st.q||st.cidade||st.bairro||st.cons||st.quartos||st.preco||st.sit);
   $("vazio").hidden = r.length>0;
   $("grid").innerHTML = r.map(i=>`<article class="card">
-    <button class="abre" data-id="${i.id}" aria-label="Ver detalhes do ${i.nome}">
-    <div class="capa">${capa(i)}${i.status?`<span class="tag ${i.status==="Pronto"?"pronto":""}">${sitLabel[i.status]||i.status}</span>`:""}</div>
-    <div class="info"><div class="bairro">${[i.bairro,i.cidade].filter(Boolean).join(" · ")||"Salvador"}</div><div class="nome">${i.nome}</div>
-    ${i.construtora?`<div class="const">${i.construtora}</div>`:""}
-    <div class="meta">${[i.tipologia,area(i)].filter(Boolean).join(" · ")||"&nbsp;"}</div>
+    <button class="abre" data-id="${esc(i.id)}" aria-label="Ver detalhes do ${esc(i.nome)}">
+    <div class="capa">${capa(i)}${i.status?`<span class="tag ${i.status==="Pronto"?"pronto":""}">${esc(sitLabel[i.status]||i.status)}</span>`:""}</div>
+    <div class="info"><div class="bairro">${esc([i.bairro,i.cidade].filter(Boolean).join(" · ")||"Salvador")}</div><div class="nome">${esc(i.nome)}</div>
+    ${i.construtora?`<div class="const">${esc(i.construtora)}</div>`:""}
+    <div class="meta">${esc([i.tipologia,area(i)].filter(Boolean).join(" · "))||"&nbsp;"}</div>
     <div class="preco">${i.preco!=null?"<small>a partir de</small>":"<small>valores</small>"}<b>${fmt(i.preco)}</b></div></div></button>
-    <a class="btn btn-lar btn-wa" href="${waItem(i)}" target="_blank" rel="noopener">Quero saber mais</a></article>`).join("");
+    <a class="btn btn-lar btn-wa" href="${esc(waItem(i))}" target="_blank" rel="noopener">Quero saber mais</a></article>`).join("");
 }
 function abrir(id){
   const i=DATA.find(x=>x.id===id); if(!i) return;
   const n=i.fotos||0;
   let html;
-  if(n){ html=`<div class="slides" id="dSlides">${Array.from({length:n},(_,k)=>`<img src="${foto(i,k)}" alt="${i.nome} — imagem ${k+1} de ${n}" ${k?'loading="lazy"':''}>`).join("")}</div>
+  if(n){ html=`<div class="slides" id="dSlides">${Array.from({length:n},(_,k)=>`<img src="${foto(i,k)}" alt="${esc(i.nome)} — imagem ${k+1} de ${n}" ${k?'loading="lazy"':''}>`).join("")}</div>
     ${n>1?'<button class="nav prev" id="dPrev" aria-label="Imagem anterior">‹</button><button class="nav next" id="dNext" aria-label="Próxima imagem">›</button><span class="contador" id="dCont">1 / '+n+'</span>':''}
     <span class="ilustra">Imagens ilustrativas</span>`; }
-  else if(i.img) html=`<div class="slides"><img src="covers/${i.id}.jpg" alt="Imagem do ${i.nome}"></div>`;
-  else html=`<div class="ph"><div>${i.nome}<br><small style="font-family:var(--body);font-size:13px;color:var(--laranja)">Fotos e plantas pelo WhatsApp</small></div></div>`;
+  else if(i.img) html=`<div class="slides"><img src="covers/${esc(i.id)}.jpg" alt="Imagem do ${esc(i.nome)}"></div>`;
+  else html=`<div class="ph"><div>${esc(i.nome)}<br><small style="font-family:var(--body);font-size:13px;color:var(--laranja)">Fotos e plantas pelo WhatsApp</small></div></div>`;
   $("dCapa").innerHTML = html+'<button class="fechar" id="dFechar" aria-label="Fechar">×</button>';
   $("dThumbs").innerHTML = n>1? Array.from({length:n},(_,k)=>`<button data-k="${k}" aria-label="Ver imagem ${k+1}" aria-current="${k===0}"><img src="${foto(i,k)}" alt="" loading="lazy"></button>`).join("") : "";
   $("dThumbs").hidden = n<=1;
@@ -298,7 +301,7 @@ function abrir(id){
   } else { $("dlg").onkeydown=null; }
   $("dBairro").textContent=[i.bairro,i.cidade].filter(Boolean).join(" · ")||"Salvador"; $("dNome").textContent=i.nome; $("dPreco").textContent=fmt(i.preco); $("dPreco").previousElementSibling.textContent=i.preco!=null?"a partir de":"valores";
   const f=[["Construtora",i.construtora],["Tipologia",i.tipologia],["Metragem",area(i)],["Situação",sitLabel[i.status]],["Entrega",i.entrega]].filter(x=>x[1]);
-  $("dFichas").innerHTML=f.map(x=>`<div class="ficha"><span>${x[0]}</span><b>${x[1]}</b></div>`).join("");
+  $("dFichas").innerHTML=f.map(x=>`<div class="ficha"><span>${esc(x[0])}</span><b>${esc(x[1])}</b></div>`).join("");
   $("dWa").href=waItem(i);
   $("dlg").showModal();
 }
